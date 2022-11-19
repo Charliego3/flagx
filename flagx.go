@@ -8,7 +8,8 @@ import (
 type Flagx struct {
 	name   string
 	desc   string
-	flags  map[string]*Flag
+	sflags map[string]*Flag
+	lflags map[string]*Flag
 	args   []string
 	output io.Writer
 
@@ -24,13 +25,14 @@ func NewNamedFlagx(name, description string) *Flagx {
 	if len(name) == 0 {
 		name = os.Args[0]
 	}
-	return &Flagx{
-		name: name,
-		desc: description,
-		flags: map[string]*Flag{
-			"h": {short: 'h', long: "help", usage: "Help for " + name},
-		},
+	f := &Flagx{
+		name:   name,
+		desc:   description,
+		sflags: make(map[string]*Flag),
+		lflags: make(map[string]*Flag),
 	}
+	f.append(nil, "help,h", "", WithDescription("Help for "+name))
+	return f
 }
 
 func NewFlagx() *Flagx {
@@ -41,11 +43,19 @@ func (f *Flagx) SetOutput(w io.Writer) {
 	f.output = w
 }
 
+func SetOutput(w io.Writer) {
+	CommandLine.output = w
+}
+
 func (f *Flagx) Output() io.Writer {
 	if f.output == nil {
 		return os.Stderr
 	}
 	return f.output
+}
+
+func Output() io.Writer {
+	return CommandLine.Output()
 }
 
 func (f *Flagx) Parse() error {
@@ -63,13 +73,28 @@ func (f *Flagx) Parse() error {
 		break
 	}
 
-	for _, fg := range f.flags {
+	for _, fg := range f.lflags {
 		if fg.require && !fg.parsed {
 			_ = f.failf("flag is required: %s %s", fg.getKey(), fg.getValueType())
 			patchOSExit(0)
 		}
 	}
 	return nil
+}
+
+func Parse() error {
+	return CommandLine.Parse()
+}
+
+func (f *Flagx) MustParse() {
+	err := f.Parse()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func MustParse() {
+	CommandLine.MustParse()
 }
 
 func (f *Flagx) Usage() {
@@ -80,6 +105,6 @@ func (f *Flagx) Usage() {
 	}
 }
 
-func Parse() {
-	_ = CommandLine.Parse()
+func Usage() {
+	CommandLine.Usage()
 }

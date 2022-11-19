@@ -18,17 +18,17 @@ import (
 	_TEMPLATE = `
 // {{ .Upper }} start ========================================
 
-func (f *Flagx) {{ .Upper }}(short rune, long string, def {{ .Def }}, opts ...Option) *{{ .Type }} {
+func (f *Flagx) {{ .Upper }}(name string, def {{ .Def }}, opts ...Option) *{{ .Type }} {
 	v := new({{ .Type }})
-	f.{{ .Upper }}Var(v, short, long, def, opts...)
+	f.{{ .Upper }}Var(v, name, def, opts...)
 	return v
 }
 
-func {{ .Upper }}(short rune, long string, def {{ .Def }}, opts ...Option) *{{ .Type }} {
-	return CommandLine.{{ .Upper }}(short, long, def, opts...)
+func {{ .Upper }}(name string, def {{ .Def }}, opts ...Option) *{{ .Type }} {
+	return CommandLine.{{ .Upper }}(name, def, opts...)
 }
 
-func (f *Flagx) {{ .Upper }}Var(p *{{ .Type }}, short rune, long string, def {{ .Def }}, opts ...Option) {
+func (f *Flagx) {{ .Upper }}Var(p *{{ .Type }}, name string, def {{ .Def }}, opts ...Option) {
 	{{- if .Check }}
 	if def != nil {
 		*p = {{ .DefSt }}def
@@ -36,11 +36,11 @@ func (f *Flagx) {{ .Upper }}Var(p *{{ .Type }}, short rune, long string, def {{ 
 	{{- else }}
 	*p = {{ .DefSt }}def
 	{{- end }}
-	f.append((*{{ .Lower }})(p), short, long, def, opts...)
+	f.append((*{{ .Lower }})(p), name, def, opts...)
 }
 
-func {{ .Upper }}Var(p *{{ .Type }}, short rune, long string, def {{ .Def }}, opts ...Option) {
-	CommandLine.{{ .Upper }}Var(p, short, long, def, opts...)
+func {{ .Upper }}Var(p *{{ .Type }}, name string, def {{ .Def }}, opts ...Option) {
+	CommandLine.{{ .Upper }}Var(p, name, def, opts...)
 }
 
 // {{ .Upper }} ended ========================================

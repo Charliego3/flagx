@@ -48,42 +48,42 @@ func (b *BasicSuite) SetupTest() {
 
 func (b *BasicSuite) TestBasic() {
 	fakeArgs(
-		newArg('a', "int", *b.int),
-		newArg('b', "int8", *b.int8),
-		newArg('c', "int16", *b.int16),
-		newArg('d', "int32", *b.int32),
-		newArg('e', "int64", *b.int64),
-		newArg('f', "uint", *b.uint),
-		newArg('g', "uint8", *b.uint8),
-		newArg('i', "uint16", *b.uint16),
-		newArg('j', "uint32", *b.uint32),
-		newArg('k', "uint64", *b.uint64),
-		newArg('l', "float32", *b.float32),
-		newArg('m', "float64", *b.float64),
-		newArg('n', "bool", *b.bool),
-		newArg('o', "string", *b.string),
-		newArg('p', "duration", *b.duration),
-		newArg('q', "file", b.file),
+		newArg("a", "int", *b.int),
+		newArg("b", "int8", *b.int8),
+		newArg("c", "int16", *b.int16),
+		newArg("d", "int32", *b.int32),
+		newArg("e", "int64", *b.int64),
+		newArg("f", "uint", *b.uint),
+		newArg("g", "uint8", *b.uint8),
+		newArg("i", "uint16", *b.uint16),
+		newArg("j", "uint32", *b.uint32),
+		newArg("k", "uint64", *b.uint64),
+		newArg("l", "float32", *b.float32),
+		newArg("m", "float64", *b.float64),
+		newArg("n", "bool", *b.bool),
+		newArg("o", "string", *b.string),
+		newArg("p", "duration", *b.duration),
+		newArg("q", "file", b.file),
 	)
 
 	flagx := NewFlagx()
 	v := &obj{}
-	v.int = flagx.Int('a', "int", 0, WithDescription("expect int value"))
-	v.int8 = flagx.Int8('b', "int8", 0, WithDescription("expect int8 value"))
-	v.int16 = flagx.Int16('c', "int16", 0, WithDescription("expect int16 value"))
-	v.int32 = flagx.Int32('d', "int32", 0, WithDescription("expect int32 value"))
-	v.int64 = flagx.Int64('e', "int64", 0, WithDescription("expect int64 value"))
-	v.uint = flagx.Uint('f', "uint", 0, WithDescription("expect uint value"))
-	v.uint8 = flagx.Uint8('g', "uint8", 0, WithDescription("expect uint8 value"))
-	v.uint16 = flagx.Uint16('i', "uint16", 0, WithDescription("expect uint16 value"))
-	v.uint32 = flagx.Uint32('j', "uint32", 0, WithDescription("expect uint32 value"))
-	v.uint64 = flagx.Uint64('k', "uint64", 0, WithDescription("expect uint64 value"))
-	v.float32 = flagx.Float32('l', "float32", 0, WithDescription("expect float32 value"))
-	v.float64 = flagx.Float64('m', "float64", 0, WithDescription("expect float64 value"))
-	v.bool = flagx.Bool('n', "bool", false, WithDescription("expect bool value"))
-	v.string = flagx.String('o', "string", "", WithDescription("expect string value"))
-	v.duration = flagx.Duration('p', "duration", time.Millisecond, WithDescription("expect string value"))
-	v.file = flagx.File('q', "file", nil, WithDescription("expect file value"))
+	v.int = flagx.Int("int,a", 0, WithDescription("expect int value"))
+	v.int8 = flagx.Int8("int8,b", 0, WithDescription("expect int8 value"))
+	v.int16 = flagx.Int16("int16,c", 0, WithDescription("expect int16 value"))
+	v.int32 = flagx.Int32("int32,d", 0, WithDescription("expect int32 value"))
+	v.int64 = flagx.Int64("int64,e", 0, WithDescription("expect int64 value"))
+	v.uint = flagx.Uint("uint,f", 0, WithDescription("expect uint value"))
+	v.uint8 = flagx.Uint8("uint8,g", 0, WithDescription("expect uint8 value"))
+	v.uint16 = flagx.Uint16("uint16,i", 0, WithDescription("expect uint16 value"))
+	v.uint32 = flagx.Uint32("uint32,j", 0, WithDescription("expect uint32 value"))
+	v.uint64 = flagx.Uint64("uint64,k", 0, WithDescription("expect uint64 value"))
+	v.float32 = flagx.Float32("float32,l", 0, WithDescription("expect float32 value"))
+	v.float64 = flagx.Float64("float64,m", 0, WithDescription("expect float64 value"))
+	v.bool = flagx.Bool("bool,n", false, WithDescription("expect bool value"))
+	v.string = flagx.String("string,o", "", WithDescription("expect string value"))
+	v.duration = flagx.Duration("duration,p", time.Millisecond, WithDescription("expect string value"))
+	v.file = flagx.File("file,q", nil, WithDescription("expect file value"))
 	err := flagx.Parse()
 	b.NoError(err)
 
@@ -214,17 +214,17 @@ func registerPatch(t *testing.T) {
 }
 
 type arg struct {
-	s rune
+	s string
 	l string
 	v any
 }
 
 func (a *arg) randomFlag() []string {
 	key := "-"
-	if *random[bool]() {
+	if len(strings.TrimSpace(a.s)) == 0 || *random[bool]() {
 		key += "-" + a.l
 	} else {
-		key += string(a.s)
+		key += a.s
 	}
 
 	if d, ok := a.v.(bool); ok && d && *random[bool]() {
@@ -245,6 +245,6 @@ func (a *arg) randomFlag() []string {
 	}
 }
 
-func newArg(s rune, l string, v any) *arg {
-	return &arg{s: s, l: l, v: v}
+func newArg(sname string, lname string, v any) *arg {
+	return &arg{s: sname, l: lname, v: v}
 }

@@ -1,8 +1,11 @@
 package flagx
 
+import (
+	"strings"
+)
+
 type Flag struct {
-	short     rune
-	long      string
+	name      string
 	usage     string
 	def       any // using default value when haven't provide
 	require   bool
@@ -12,11 +15,12 @@ type Flag struct {
 }
 
 func (f *Flag) getKey() string {
-	key := "-" + string(f.short)
-	if len(f.long) > 0 {
-		key += ", --" + f.long
+	keys := strings.Split(f.name, ",")
+	if len(keys) == 1 {
+		return "--" + keys[0]
 	}
-	return key
+
+	return "-" + keys[1] + ", --" + keys[0]
 }
 
 func (f *Flag) getValueType() string {
@@ -90,35 +94,57 @@ func (f *Flag) getValueType() string {
 	}
 }
 
-func (f *Flagx) append(v Value, short rune, long string, def any, opts ...Option) *Flag {
-	arg := &Flag{short: short, long: long, value: v, def: def}
+func (f *Flagx) append(v Value, name string, def any, opts ...Option) {
+	fg := &Flag{name: name, value: v, def: def}
 	for _, opt := range opts {
-		opt(arg)
+		opt(fg)
 	}
 
-	sn := string(short)
-	f.check(v, sn, "-")
-	f.flags[sn] = arg
-	if len(long) > 0 {
-		f.check(v, long, "--")
-		f.flags[long] = arg
+	if len(fg.name) == 0 {
+		f.report("empty name with: " + fg.getValueType())
 	}
-	return arg
-}
 
-func (f *Flagx) check(v Value, name, dashes string) {
-	_, exists := f.flags[name]
-	if _, ok := v.(listValue); !ok && exists {
-		f.report(dashes + name)
+	var sname, lname string
+	keys := strings.Split(fg.name, ",")
+	kl := len(keys)
+	invalid := false
+	if kl == 1 {
+		lname = keys[0]
+	} else if kl == 2 {
+		if len(keys[1]) != 1 {
+			invalid = true
+		} else {
+			sname = keys[1]
+		}
+		lname = keys[0]
+	} else {
+		invalid = true
+	}
+
+	if invalid {
+		f.report("invalid name syntax: " + fg.name)
+	}
+
+	if _, ok := f.sflags[sname]; ok {
+		f.report("redefined: -" + sname)
+	}
+
+	if _, ok := f.lflags[lname]; ok {
+		f.report("redefined: --" + lname)
+	}
+
+	f.lflags[lname] = fg
+	if len(sname) > 0 {
+		f.sflags[sname] = fg
 	}
 }
 
 func (f *Flagx) report(name string) {
 	var msg string
 	if f.name == "" {
-		msg = f.sprintf("flag redefined: %s", name)
+		msg = f.sprintf("flag %s", name)
 	} else {
-		msg = f.sprintf("%s flag redefined: %s", f.name, name)
+		msg = f.sprintf("%s flag %s", f.name, name)
 	}
 	panic(msg)
 }

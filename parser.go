@@ -12,7 +12,7 @@ func (f *Flagx) parseOne() (bool, error) {
 		return false, nil
 	}
 
-	original, name := f.nextArg()
+	original, name, long := f.nextArg()
 	if original[0] != '-' || len(name) == 0 ||
 		name[0] == '-' || name[0] == '=' {
 		return false, f.failf("bad flag syntax: %s", original)
@@ -32,7 +32,7 @@ func (f *Flagx) parseOne() (bool, error) {
 		return false, nil
 	}
 
-	fg, err = f.getFlag(original, name)
+	fg, err = f.getFlag(original, name, long)
 	if err != nil {
 		return false, err
 	}
@@ -44,7 +44,7 @@ func (f *Flagx) parseOne() (bool, error) {
 
 	_, isBool := fg.value.(*boolValue)
 	if idx <= 0 { // eg: --name [value], bool can be `--name` only
-		vo, vv := f.nextArg()
+		vo, vv, _ := f.nextArg()
 		if isBool && len(vo) > 0 && vo[0] == '-' {
 			value = "true"
 			f.args = append([]string{vo}, f.args...)
@@ -62,17 +62,22 @@ func (f *Flagx) parseOne() (bool, error) {
 	return true, nil
 }
 
-func (f *Flagx) getFlag(original, name string) (*Flag, error) {
-	arg := f.flags[name]
-	if arg == nil {
+func (f *Flagx) getFlag(original, name string, long bool) (*Flag, error) {
+	var fg *Flag
+	if long {
+		fg = f.lflags[name]
+	} else {
+		fg = f.sflags[name]
+	}
+	if fg == nil {
 		return nil, f.failf("flag not declared: %s", original)
 	}
-	return arg, nil
+	return fg, nil
 }
 
-func (f *Flagx) nextArg() (string, string) {
+func (f *Flagx) nextArg() (string, string, bool) {
 	if len(f.args) == 0 {
-		return "", ""
+		return "", "", false
 	}
 
 	arg := f.args[0]
@@ -82,6 +87,7 @@ func (f *Flagx) nextArg() (string, string) {
 	}
 
 	numMinus := 0
+	var long bool
 	if arg[0] == '-' {
 		numMinus++
 		if len(arg) == 1 {
@@ -95,10 +101,11 @@ func (f *Flagx) nextArg() (string, string) {
 				f.args = f.args[1:]
 				return f.nextArg()
 			}
+			long = true
 		}
 	}
 	f.args = f.args[1:]
-	return arg, arg[numMinus:]
+	return arg, arg[numMinus:], long
 }
 
 func (f *Flagx) failf(format string, v ...any) error {
@@ -120,15 +127,9 @@ func (f *Flagx) defaultUsage() {
 	}
 
 	f.sprintf("Flags:")
-	ignore := make(map[string]struct{})
 	w := tabwriter.NewWriter(f.Output(), 10, 0, 3, ' ', 0)
-	for _, fg := range f.flags {
+	for _, fg := range f.lflags {
 		key := fg.getKey()
-		if _, ok := ignore[key]; ok {
-			continue
-		}
-
-		ignore[key] = struct{}{}
 		key = "    " + key
 		valueType := fg.getValueType()
 		if _, ok := fg.value.(*boolValue); ok {
