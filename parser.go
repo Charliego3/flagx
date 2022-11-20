@@ -33,10 +33,7 @@ func (f *Flagx) parseOne() (bool, error) {
 	}
 
 	fg, err = f.getFlag(original, name, long)
-	if err != nil {
-		if f.handling == SkipNoDeclared {
-			err = nil
-		}
+	if err != nil || fg == nil {
 		return false, err
 	}
 
@@ -72,7 +69,7 @@ func (f *Flagx) getFlag(original, name string, long bool) (*Flag, error) {
 	} else {
 		fg = f.sflags[name]
 	}
-	if fg == nil {
+	if f.handling != SkipNoDeclared && fg == nil {
 		return nil, f.failf("flag not declared: %s", original)
 	}
 	return fg, nil
