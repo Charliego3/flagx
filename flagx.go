@@ -5,6 +5,14 @@ import (
 	"os"
 )
 
+type ErrorHandling uint8
+
+const (
+	Nope ErrorHandling = iota
+	ContinueOnError
+	SkipNoDeclared
+)
+
 type Flagx struct {
 	name   string
 	desc   string
@@ -13,7 +21,8 @@ type Flagx struct {
 	args   []string
 	output io.Writer
 
-	UsageFn func()
+	UsageFn  func()
+	handling ErrorHandling
 }
 
 var (
@@ -43,6 +52,22 @@ func (f *Flagx) SetOutput(w io.Writer) {
 	f.output = w
 }
 
+func (f *Flagx) SetErrorHandling(h ErrorHandling) {
+	f.handling = h
+}
+
+func SetErrorHandling(h ErrorHandling) {
+	CommandLine.handling = h
+}
+
+func (f *Flagx) GetErrorHandling() ErrorHandling {
+	return f.handling
+}
+
+func GetErrorHandling() ErrorHandling {
+	return CommandLine.handling
+}
+
 func SetOutput(w io.Writer) {
 	CommandLine.output = w
 }
@@ -65,7 +90,7 @@ func (f *Flagx) Parse() error {
 		if parsed {
 			continue
 		}
-		if err == nil {
+		if err == nil || f.handling == ContinueOnError {
 			break
 		}
 

@@ -34,6 +34,9 @@ func (f *Flagx) parseOne() (bool, error) {
 
 	fg, err = f.getFlag(original, name, long)
 	if err != nil {
+		if f.handling == SkipNoDeclared {
+			err = nil
+		}
 		return false, err
 	}
 
