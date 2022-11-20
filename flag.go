@@ -94,6 +94,10 @@ func (f *Flag) getValueType() string {
 	}
 }
 
+func (f *Flagx) addHelp() {
+	f.append(nil, "help,h", "", WithDescription("Help for "+f.name))
+}
+
 func (f *Flagx) append(v Value, name string, def any, opts ...Option) {
 	fg := &Flag{name: name, value: v, def: def}
 	for _, opt := range opts {

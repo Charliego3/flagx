@@ -40,7 +40,7 @@ func NewNamedFlagx(name, description string) *Flagx {
 		sflags: make(map[string]*Flag),
 		lflags: make(map[string]*Flag),
 	}
-	f.append(nil, "help,h", "", WithDescription("Help for "+name))
+	f.addHelp()
 	return f
 }
 
@@ -87,10 +87,10 @@ func (f *Flagx) Parse() error {
 	f.args = os.Args[1:]
 	for {
 		parsed, err := f.parseOne()
-		if parsed {
+		if parsed || f.handling == ContinueOnError {
 			continue
 		}
-		if err == nil || f.handling == ContinueOnError {
+		if err == nil {
 			break
 		}
 
@@ -104,6 +104,9 @@ func (f *Flagx) Parse() error {
 			patchOSExit(0)
 		}
 	}
+	f.lflags = make(map[string]*Flag)
+	f.sflags = make(map[string]*Flag)
+	f.addHelp()
 	return nil
 }
 
