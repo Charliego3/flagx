@@ -7,6 +7,8 @@ import (
 	"text/tabwriter"
 )
 
+type noDeclaredErr error
+
 func (f *Flagx) parseOne() (bool, error) {
 	if len(f.args) == 0 {
 		return false, nil
@@ -33,7 +35,7 @@ func (f *Flagx) parseOne() (bool, error) {
 	}
 
 	fg, err = f.getFlag(original, name, long)
-	if err != nil || fg == nil {
+	if err != nil {
 		return false, err
 	}
 
@@ -69,8 +71,8 @@ func (f *Flagx) getFlag(original, name string, long bool) (*Flag, error) {
 	} else {
 		fg = f.sflags[name]
 	}
-	if f.handling&SkipNoDeclared != SkipNoDeclared && fg == nil {
-		return nil, f.failf("flag not declared: %s", original)
+	if fg == nil {
+		return nil, noDeclaredErr(f.failf("flag not declared: %s", original))
 	}
 	return fg, nil
 }

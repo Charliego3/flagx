@@ -85,11 +85,16 @@ func (f *Flagx) Parse() error {
 	f.args = os.Args[1:]
 	for {
 		parsed, err := f.parseOne()
-		if parsed || f.handling&ContinueOnError == ContinueOnError {
+		if parsed {
 			continue
 		}
 		if err == nil {
 			break
+		} else if f.handling&ContinueOnError == ContinueOnError {
+			continue
+		} else if _, ok := err.(noDeclaredErr); ok &&
+			f.handling&SkipNoDeclared == SkipNoDeclared {
+			continue
 		}
 
 		patchOSExit(0)
