@@ -97,13 +97,16 @@ func (f *Flagx) Parse() error {
 			continue
 		}
 
+		f.sprintf(err.Error())
+		f.Usage()
 		patchOSExit(0)
 		break
 	}
 
 	for _, fg := range f.lflags {
 		if fg.require && !fg.parsed {
-			_ = f.failf("flag is required: %s %s", fg.getKey(), fg.getValueType())
+			f.sprintf("flag is required: %s %s", fg.getKey(), fg.getValueType())
+			f.Usage()
 			patchOSExit(0)
 		}
 	}

@@ -34,6 +34,22 @@ func (f *Flagx) parseOne() (bool, error) {
 		return false, nil
 	}
 
+	if idx <= 0 { // eg: --name [value], bool can be `--name` only
+		vo, vv, _ := f.nextArg()
+		if len(vv) > 0 && vo[0] == '-' {
+			if fg == nil {
+				f.args = append([]string{vo}, f.args...)
+			} else if _, ok := fg.value.(*boolValue); ok {
+				value = "true"
+				f.args = append([]string{vo}, f.args...)
+			} else {
+				return false, f.failf("flag needs an argument: %s", fg.getKey())
+			}
+		} else {
+			value = vv
+		}
+	}
+
 	fg, err = f.getFlag(original, name, long)
 	if err != nil {
 		return false, err
@@ -42,19 +58,6 @@ func (f *Flagx) parseOne() (bool, error) {
 	_, isList := fg.value.(listValue)
 	if fg.immutable && fg.parsed && !isList {
 		return false, f.failf("flag multiple: %s", fg.getKey())
-	}
-
-	_, isBool := fg.value.(*boolValue)
-	if idx <= 0 { // eg: --name [value], bool can be `--name` only
-		vo, vv, _ := f.nextArg()
-		if isBool && len(vo) > 0 && vo[0] == '-' {
-			value = "true"
-			f.args = append([]string{vo}, f.args...)
-		} else if len(vv) > 0 && vv[0] == '-' {
-			return false, f.failf("flag needs an argument: %s", fg.getKey())
-		} else {
-			value = vv
-		}
 	}
 
 	if err = fg.value.Set(value); err != nil {
@@ -111,8 +114,7 @@ func (f *Flagx) nextArg() (string, string, bool) {
 }
 
 func (f *Flagx) failf(format string, v ...any) error {
-	msg := f.sprintf(format+"\n", v...)
-	f.Usage()
+	msg := fmt.Sprintf(format, v...)
 	return errors.New(msg)
 }
 
