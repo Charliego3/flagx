@@ -69,7 +69,7 @@ func (f *Flagx) getFlag(original, name string, long bool) (*Flag, error) {
 	} else {
 		fg = f.sflags[name]
 	}
-	if f.handling != SkipNoDeclared && fg == nil {
+	if f.handling&SkipNoDeclared == SkipNoDeclared && fg == nil {
 		return nil, f.failf("flag not declared: %s", original)
 	}
 	return fg, nil

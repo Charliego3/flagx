@@ -5,12 +5,10 @@ import (
 	"os"
 )
 
-type ErrorHandling uint8
-
 const (
-	Nope ErrorHandling = iota
-	ContinueOnError
-	SkipNoDeclared
+	ContinueOnError uint8 = 0b1
+	SkipNoDeclared  uint8 = 0b10
+	ClearAfterParse uint8 = 0b100
 )
 
 type Flagx struct {
@@ -22,7 +20,7 @@ type Flagx struct {
 	output io.Writer
 
 	UsageFn  func()
-	handling ErrorHandling
+	handling uint8
 }
 
 var (
@@ -52,19 +50,19 @@ func (f *Flagx) SetOutput(w io.Writer) {
 	f.output = w
 }
 
-func (f *Flagx) SetErrorHandling(h ErrorHandling) {
+func (f *Flagx) SetErrorHandling(h uint8) {
 	f.handling = h
 }
 
-func SetErrorHandling(h ErrorHandling) {
+func SetErrorHandling(h uint8) {
 	CommandLine.handling = h
 }
 
-func (f *Flagx) GetErrorHandling() ErrorHandling {
+func (f *Flagx) GetErrorHandling() uint8 {
 	return f.handling
 }
 
-func GetErrorHandling() ErrorHandling {
+func GetErrorHandling() uint8 {
 	return CommandLine.handling
 }
 
@@ -87,7 +85,7 @@ func (f *Flagx) Parse() error {
 	f.args = os.Args[1:]
 	for {
 		parsed, err := f.parseOne()
-		if parsed || f.handling == ContinueOnError {
+		if parsed || f.handling&ContinueOnError == ContinueOnError {
 			continue
 		}
 		if err == nil {
@@ -104,9 +102,11 @@ func (f *Flagx) Parse() error {
 			patchOSExit(0)
 		}
 	}
-	f.lflags = make(map[string]*Flag)
-	f.sflags = make(map[string]*Flag)
-	f.addHelp()
+	if f.handling&ClearAfterParse == ClearAfterParse {
+		f.lflags = make(map[string]*Flag)
+		f.sflags = make(map[string]*Flag)
+		f.addHelp()
+	}
 	return nil
 }
 
