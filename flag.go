@@ -110,7 +110,7 @@ func (fg *Flag) getDef() string {
 	case *stringValue, *durationValue, *fileValue:
 		def = `"` + def + `"`
 	}
-	return ` (default: "` + def + `")`
+	return ` (default: ` + def + `)`
 }
 
 func (f *Flagx) addHelp() {
@@ -143,6 +143,25 @@ func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
 			return
 		}
 		if strings.Contains(err.(string), "redefined") { // redefined
+			if f.handling&OverrideRedefined == OverrideRedefined {
+				lffg := f.Lookup(fg.Lname)
+				if lffg != nil {
+					lffg.Name = fg.Lname
+					lffg.Usage = fg.Usage
+					lffg.DefValue = fg.DefVal
+					lffg.Value = v
+				}
+
+				sffg := f.Lookup(fg.Sname)
+				if sffg != nil {
+					sffg.Name = fg.Sname
+					sffg.Usage = fg.Usage
+					sffg.DefValue = fg.DefVal
+					sffg.Value = v
+				}
+				return
+			}
+
 			var msg string
 			if short {
 				msg = fg.getShortName()

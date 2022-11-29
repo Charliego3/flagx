@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	ContinueOnError flag.ErrorHandling = 0b1
-	SkipNoDeclared  flag.ErrorHandling = 0b10
-	ClearAfterParse flag.ErrorHandling = 0b100
+	ContinueOnError   flag.ErrorHandling = 0b1
+	SkipNoDeclared    flag.ErrorHandling = 0b10
+	OverrideRedefined flag.ErrorHandling = 0b100
 )
 
 type Flagx struct {
@@ -202,10 +202,6 @@ func (f *Flagx) Parse() error {
 			f.report("flag is required: ", fg.showFlag())
 			patchOSExit(0)
 		}
-	}
-	if f.handling&ClearAfterParse == ClearAfterParse {
-		f.flags = nil
-		f.addHelp()
 	}
 	return nil
 }
