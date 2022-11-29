@@ -48,7 +48,7 @@ func (f *Flagx) parseOne() (bool, error) {
 
 	if fg.isHelp() {
 		f.Usage()
-		return false, nil
+		patchOSExit(0)
 	}
 
 	_, isList := fg.Value.(listValue)
