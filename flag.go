@@ -164,6 +164,7 @@ func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
 					for _, g := range f.flags {
 						if g.Lname == fg.Lname || g.Sname == fg.Sname {
 							g.Value = v
+							break
 						}
 					}
 				}
@@ -247,7 +248,7 @@ func (f *Flagx) report(msgs ...string) {
 	}
 	b.WriteString("\n")
 
-	style := lipgloss.NewStyle().Bold(true).Underline(true).Foreground(lipgloss.Color("#ff4c00"))
+	style := lipgloss.NewStyle().Bold(true).Underline(true).Foreground(lipgloss.Color("#c91f37"))
 	f.println(style.Render(b.String()))
 	f.Usage()
 	patchOSExit(2)

@@ -131,8 +131,8 @@ func (f *Flagx) defaultUsage() {
 	snameStyle := padding.Copy().Foreground(lipgloss.Color("#0c8918"))
 	lnameStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#4682B4"))
 	defStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D26CD"))
-	typStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.AdaptiveColor{Light: "#CFCFCF", Dark: "#4F4F4F"})
-	descStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#808080"))
+	typStyle := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#CFCFCF", Dark: "#4F4F4F"})
+	descStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#808080"))
 	name := f.set.Name()
 	if len(name) == 0 {
 		name = os.Args[0]
@@ -140,20 +140,23 @@ func (f *Flagx) defaultUsage() {
 	f.println(usageStyle.Render("Usage:"))
 	f.println(nameStyle.Render(name), optsStyle.Render(" [flags]...\n"))
 	f.println(flagStyle.Render("Flags:"))
-	w := tabwriter.NewWriter(f.Output(), 5, 0, 0, ' ', 0)
+	w := tabwriter.NewWriter(f.Output(), 10, 0, 0, ' ', 0)
 
 	for _, fg := range f.flags {
 		var name, usage string
 		sname := fg.getShortName()
 		lname := fg.getLongName()
 		typ := fg.getType()
+		if len(typ) > 0 {
+			typ = "<" + typ + ">"
+		}
 
 		name = snameStyle.Render(sname)
 		if len(lname) > 0 {
 			if len(sname) > 0 {
 				name += typStyle.Render(", ")
 			} else {
-				name += defStyle.String()
+				name += typStyle.String()
 			}
 			name += lnameStyle.Render(lname)
 		}
@@ -161,7 +164,7 @@ func (f *Flagx) defaultUsage() {
 		if len(fg.DefVal) > 0 {
 			usage += defStyle.Render(fg.getDef())
 		}
-		_, _ = fmt.Fprintln(w, name, "\t", typStyle.Render(typ), "\t", descStyle.Render("     "+usage))
+		_, _ = fmt.Fprintln(w, name, "\t", typStyle.Render(typ), "\t", descStyle.Render("\t\t"+usage))
 	}
 	_ = w.Flush()
 }

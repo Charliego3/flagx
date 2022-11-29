@@ -50,7 +50,7 @@ var (
 	// _     = String("xval3,xx3", "def", WithDescription("3 flagx based on flag string"))
 	// _     = String("xval4,xx4", "def", WithDescription("4 flagx based on flag string"))
 	// _     = String("xval5,xx5", "def", WithDescription("5 flagx based on flag string"))
-	// _ = String("xvals,xx", "xvalue", WithDescription("xval flag"))
+	_ = String("xvals,xx", "xvalue", WithDescription("xval flag"))
 )
 
 func TestList(t *testing.T) {
