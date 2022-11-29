@@ -3,8 +3,11 @@ package flagx
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 type noDeclaredErr error
@@ -29,55 +32,51 @@ func (f *Flagx) parseOne() (bool, error) {
 		name = name[:idx]
 	}
 
-	if name == "help" || name == "h" {
+	for _, g := range f.flags {
+		if long && g.lname == name {
+			fg = g
+			break
+		} else if g.sname == name {
+			fg = g
+			break
+		}
+	}
+
+	if fg == nil {
+		return false, noDeclaredErr(f.failf("flag not declared: %s", original))
+	}
+
+	if fg.isHelp() {
 		f.Usage()
 		return false, nil
 	}
 
-	if idx <= 0 { // eg: --name [value], bool can be `--name` only
+	_, isList := fg.value.(listValue)
+	if fg.immutable && fg.parsed && !isList {
+		return false, f.failf("flag multiple: %s", fg.showFlag())
+	}
+
+	// instead of providing value via =
+	// eg: --name [value], bool can be `--name` only
+	if idx <= 0 {
 		vo, vv, _ := f.nextArg()
 		if len(vv) > 0 && vo[0] == '-' {
-			if fg == nil {
-				f.args = append([]string{vo}, f.args...)
-			} else if _, ok := fg.value.(*boolValue); ok {
+			if _, ok := fg.value.(*boolValue); ok {
 				value = "true"
 				f.args = append([]string{vo}, f.args...)
 			} else {
-				return false, f.failf("flag needs an argument: %s", fg.getKey())
+				return false, f.failf("flag needs an argument: %s", fg.showFlag())
 			}
 		} else {
 			value = vv
 		}
 	}
 
-	fg, err = f.getFlag(original, name, long)
-	if err != nil {
-		return false, err
-	}
-
-	_, isList := fg.value.(listValue)
-	if fg.immutable && fg.parsed && !isList {
-		return false, f.failf("flag multiple: %s", fg.getKey())
-	}
-
 	if err = fg.value.Set(value); err != nil {
-		return false, f.failf("invalid value %q for flag %s: %v", value, fg.getKey(), err)
+		return false, f.failf("invalid value %q for flag %s: %v", value, fg.showFlag(), err)
 	}
 	fg.parsed = true
 	return true, nil
-}
-
-func (f *Flagx) getFlag(original, name string, long bool) (*Flag, error) {
-	var fg *Flag
-	if long {
-		fg = f.lflags[name]
-	} else {
-		fg = f.sflags[name]
-	}
-	if fg == nil {
-		return nil, noDeclaredErr(f.failf("flag not declared: %s", original))
-	}
-	return fg, nil
 }
 
 func (f *Flagx) nextArg() (string, string, bool) {
@@ -118,28 +117,51 @@ func (f *Flagx) failf(format string, v ...any) error {
 	return errors.New(msg)
 }
 
-func (f *Flagx) sprintf(format string, v ...any) string {
-	msg := fmt.Sprintf(format, v...)
-	_, _ = fmt.Fprintln(f.Output(), msg)
-	return msg
+func (f *Flagx) println(msgs ...string) {
+	_, _ = fmt.Fprintln(f.Output(), strings.Join(msgs, ""))
 }
 
+// defaultUsage print the Usage to console
 func (f *Flagx) defaultUsage() {
-	f.sprintf("Usage:")
-	if f.name != "" {
-		f.sprintf("    %s [flags]...\n", f.name)
+	padding := lipgloss.NewStyle().PaddingLeft(4).Bold(true)
+	usageStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ffa400"))
+	nameStyle := padding.Copy().Underline(true).Foreground(lipgloss.Color("#0aa344"))
+	optsStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#75878a"))
+	flagStyle := usageStyle.Copy().Foreground(lipgloss.Color("#00F5FF"))
+	snameStyle := padding.Copy().Foreground(lipgloss.Color("#0c8918"))
+	lnameStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#4682B4"))
+	defStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D26CD"))
+	typStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.AdaptiveColor{Light: "#CFCFCF", Dark: "#4F4F4F"})
+	descStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#808080"))
+	name := f.name
+	if len(name) == 0 {
+		name = os.Args[0]
 	}
+	f.println(usageStyle.Render("Usage:"))
+	f.println(nameStyle.Render(name), optsStyle.Render(" [flags]...\n"))
+	f.println(flagStyle.Render("Flags:"))
+	w := tabwriter.NewWriter(f.Output(), 5, 0, 0, ' ', 0)
 
-	f.sprintf("Flags:")
-	w := tabwriter.NewWriter(f.Output(), 10, 0, 3, ' ', 0)
-	for _, fg := range f.lflags {
-		key := fg.getKey()
-		key = "    " + key
-		valueType := fg.getValueType()
-		if _, ok := fg.value.(*boolValue); ok {
-			valueType = "[" + valueType + "]"
+	for _, fg := range f.flags {
+		var name, usage string
+		sname := fg.getShortName()
+		lname := fg.getLongName()
+		typ := fg.getType()
+
+		name = snameStyle.Render(sname)
+		if len(lname) > 0 {
+			if len(sname) > 0 {
+				name += typStyle.Render(", ")
+			} else {
+				name += defStyle.String()
+			}
+			name += lnameStyle.Render(lname)
 		}
-		_, _ = fmt.Fprintln(w, key, valueType, "\t", fg.usage)
+		usage = fg.usage
+		if len(fg.defVal) > 0 {
+			usage += defStyle.Render(` (default: ` + fg.getDef() + `)`)
+		}
+		_, _ = fmt.Fprintln(w, name, "\t", typStyle.Render(typ), "\t", descStyle.Render("     "+usage))
 	}
 	_ = w.Flush()
 }

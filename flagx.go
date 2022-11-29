@@ -1,8 +1,12 @@
 package flagx
 
 import (
+	"flag"
 	"io"
 	"os"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 const (
@@ -12,10 +16,10 @@ const (
 )
 
 type Flagx struct {
+	*flag.FlagSet
 	name   string
 	desc   string
-	sflags map[string]*Flag
-	lflags map[string]*Flag
+	flags  []*Flag
 	args   []string
 	output io.Writer
 
@@ -24,19 +28,24 @@ type Flagx struct {
 }
 
 var (
-	CommandLine = NewFlagx()
+	CommandLine = newfgx(os.Args[0], "", flag.CommandLine)
 	patchOSExit = os.Exit
 )
 
 func NewNamedFlagx(name, description string) *Flagx {
+	return newfgx(name, description, flag.NewFlagSet(name, flag.ExitOnError))
+}
+
+func newfgx(name, description string, set *flag.FlagSet) *Flagx {
+	set.SetOutput(io.Discard)
+	lipgloss.SetColorProfile(termenv.TrueColor)
 	if len(name) == 0 {
 		name = os.Args[0]
 	}
 	f := &Flagx{
-		name:   name,
-		desc:   description,
-		sflags: make(map[string]*Flag),
-		lflags: make(map[string]*Flag),
+		name:    name,
+		desc:    description,
+		FlagSet: set,
 	}
 	f.addHelp()
 	return f
@@ -97,22 +106,19 @@ func (f *Flagx) Parse() error {
 			continue
 		}
 
-		f.sprintf(err.Error())
-		f.Usage()
+		f.report(err.Error())
 		patchOSExit(0)
 		break
 	}
 
-	for _, fg := range f.lflags {
+	for _, fg := range f.flags {
 		if fg.require && !fg.parsed {
-			f.sprintf("flag is required: %s %s", fg.getKey(), fg.getValueType())
-			f.Usage()
+			f.report("flag is required: ", fg.showFlag())
 			patchOSExit(0)
 		}
 	}
 	if f.handling&ClearAfterParse == ClearAfterParse {
-		f.lflags = make(map[string]*Flag)
-		f.sflags = make(map[string]*Flag)
+		f.flags = nil
 		f.addHelp()
 	}
 	return nil

@@ -1,30 +1,33 @@
 package flagx
 
 import (
+	"flag"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Flag struct {
-	name      string
-	usage     string
-	def       any // using default value when haven't provide
-	require   bool
-	immutable bool
+	lname     string
+	sname     string
+	defVal    string
+	usage     string // options
+	require   bool   // options
+	immutable bool   // options
 	parsed    bool
-	value     Value
+	value     flag.Value
 }
 
-func (f *Flag) getKey() string {
-	keys := strings.Split(f.name, ",")
-	if len(keys) == 1 {
-		return "--" + keys[0]
+func (fg *Flag) isHelp() bool {
+	return fg.lname == "help" && fg.sname == "h"
+}
+
+func (fg *Flag) getType() string {
+	if fg.isHelp() {
+		return ""
 	}
 
-	return "-" + keys[1] + ", --" + keys[0]
-}
-
-func (f *Flag) getValueType() string {
-	switch f.value.(type) {
+	switch fg.value.(type) {
 	case *intValue:
 		return "int"
 	case *int8Value:
@@ -94,61 +97,127 @@ func (f *Flag) getValueType() string {
 	}
 }
 
-func (f *Flagx) addHelp() {
-	f.append(nil, "help,h", "", WithDescription("Help for "+f.name))
+func (fg *Flag) getDef() string {
+	switch fg.value.(type) {
+	case *stringValue, *durationValue, *fileValue:
+		return "\"" + fg.defVal + "\""
+	default:
+		return fg.defVal
+	}
 }
 
-func (f *Flagx) append(v Value, name string, def any, opts ...Option) {
-	fg := &Flag{name: name, value: v, def: def}
+func (f *Flagx) addHelp() {
+	f.append(new(stringValue), "help,h", WithDescription("Help for "+f.name))
+}
+
+func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
+	fg := &Flag{value: v, defVal: v.String()}
 	for _, opt := range opts {
 		opt(fg)
 	}
 
-	if len(fg.name) == 0 {
-		f.report("empty name with: " + fg.getValueType())
-	}
-
-	var sname, lname string
-	keys := strings.Split(fg.name, ",")
-	kl := len(keys)
-	invalid := false
-	if kl == 1 {
-		lname = keys[0]
-	} else if kl == 2 {
-		if len(keys[1]) != 1 {
-			invalid = true
-		} else {
-			sname = keys[1]
-		}
-		lname = keys[0]
+	keys := strings.Split(name, ",")
+	keyn := len(keys)
+	if keyn > 2 || keyn == 0 {
+		f.badSyntax(name, fg.usage)
+	} else if keyn == 2 {
+		fg.lname = keys[0]
+		fg.sname = keys[1]
+	} else if len(keys[0]) == 1 {
+		fg.sname = keys[0]
 	} else {
-		invalid = true
+		fg.lname = keys[0]
 	}
 
-	if invalid {
-		f.report("invalid name syntax: " + fg.name)
+	var short bool
+	defer func() {
+		err := recover()
+		if err == nil {
+			return
+		}
+		if strings.Contains(err.(string), "redefined") { // redefined
+			var msg string
+			if short {
+				msg = fg.getShortName()
+			} else {
+				msg = fg.getLongName()
+			}
+			msg = "[" + msg + "] " + fg.usage
+			def := v.String()
+			if len(def) > 0 {
+				msg += ` (default: ` + fg.getDef() + `)`
+			}
+			f.report("redefined:", msg)
+		} else { // bad syntax
+			f.badSyntax("["+name+"]", fg.usage)
+		}
+	}()
+
+	if len(fg.lname) > 0 {
+		f.set.Var(v, fg.lname, fg.usage)
+	}
+	if len(fg.sname) > 0 {
+		short = true
+		f.set.Var(v, fg.sname, fg.usage)
 	}
 
-	if _, ok := f.sflags[sname]; ok {
-		f.report("redefined: -" + sname)
-	}
-
-	if _, ok := f.lflags[lname]; ok {
-		f.report("redefined: --" + lname)
-	}
-
-	f.lflags[lname] = fg
-	if len(sname) > 0 {
-		f.sflags[sname] = fg
-	}
+	f.flags = append(f.flags, fg)
 }
 
-func (f *Flagx) report(name string) {
-	var msg string
-	if f.name == "" {
-		msg = f.sprintf("flag %s", name)
-	} else {
-		msg = f.sprintf("%s flag %s", f.name, name)
+func (fg *Flag) getShortName() string {
+	if len(fg.sname) == 0 {
+		return ""
 	}
-	panic(msg)
+	return "-" + fg.sname
+}
+
+func (fg *Flag) getLongName() string {
+	if len(fg.lname) == 0 {
+		return ""
+	}
+	return "--" + fg.lname
+}
+
+func (fg *Flag) showFlag() string {
+	var name string
+	sname := fg.getShortName()
+	lname := fg.getLongName()
+	if len(sname) > 0 {
+		name = sname
+		if len(lname) > 0 {
+			name += ", " + lname
+		}
+	} else {
+		name = lname
+	}
+
+	name = name + " " + fg.getType()
+	return name
+}
+
+func (f *Flagx) badSyntax(msg ...string) {
+	f.report(append([]string{"bad syntax:"}, msg...)...)
+}
+
+func (f *Flagx) report(msgs ...string) {
+	namen := len(f.name)
+	n := namen + len(msgs) + 1
+	for i := 0; i < len(msgs); i++ {
+		n += len(msgs[i])
+	}
+
+	var b strings.Builder
+	b.Grow(n)
+	if namen > 0 {
+		b.WriteString(f.name)
+	}
+	for _, msg := range msgs {
+		b.WriteString(" " + msg)
+	}
+	b.WriteString("\n")
+
+	style := lipgloss.NewStyle().Bold(true).Underline(true).Foreground(lipgloss.Color("#ff4c00"))
+	f.println(style.Render(b.String()))
+	f.Usage()
+	patchOSExit(2)
 }

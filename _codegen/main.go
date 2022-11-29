@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -36,7 +38,7 @@ func (f *Flagx) {{ .Upper }}Var(p *{{ .Type }}, name string, def {{ .Def }}, opt
 	{{- else }}
 	*p = {{ .DefSt }}def
 	{{- end }}
-	f.append((*{{ .Lower }})(p), name, def, opts...)
+	f.append((*{{ .Lower }})(p), name, opts...)
 }
 
 func {{ .Upper }}Var(p *{{ .Type }}, name string, def {{ .Def }}, opts ...Option) {
@@ -48,6 +50,9 @@ func {{ .Upper }}Var(p *{{ .Type }}, name string, def {{ .Def }}, opts ...Option
 )
 
 func main() {
+	path := flag.String("path", ".", "flag_gen.go file path")
+	flag.Parse()
+
 	keys := []string{
 		"int", "int8", "int16", "int32", "int64",
 		"uint", "uint8", "uint16", "uint32", "uint64",
@@ -71,7 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	file, err := os.Create("flag_gen.go")
+	file, err := os.Create(filepath.Join(*path, "flag_gen.go"))
 	if err != nil {
 		log.Fatal(err)
 	}

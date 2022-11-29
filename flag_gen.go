@@ -19,7 +19,7 @@ func Int(name string, def int, opts ...Option) *int {
 
 func (f *Flagx) IntVar(p *int, name string, def int, opts ...Option) {
 	*p = def
-	f.append((*intValue)(p), name, def, opts...)
+	f.append((*intValue)(p), name, opts...)
 }
 
 func IntVar(p *int, name string, def int, opts ...Option) {
@@ -42,7 +42,7 @@ func Int8(name string, def int8, opts ...Option) *int8 {
 
 func (f *Flagx) Int8Var(p *int8, name string, def int8, opts ...Option) {
 	*p = def
-	f.append((*int8Value)(p), name, def, opts...)
+	f.append((*int8Value)(p), name, opts...)
 }
 
 func Int8Var(p *int8, name string, def int8, opts ...Option) {
@@ -65,7 +65,7 @@ func Int16(name string, def int16, opts ...Option) *int16 {
 
 func (f *Flagx) Int16Var(p *int16, name string, def int16, opts ...Option) {
 	*p = def
-	f.append((*int16Value)(p), name, def, opts...)
+	f.append((*int16Value)(p), name, opts...)
 }
 
 func Int16Var(p *int16, name string, def int16, opts ...Option) {
@@ -88,7 +88,7 @@ func Int32(name string, def int32, opts ...Option) *int32 {
 
 func (f *Flagx) Int32Var(p *int32, name string, def int32, opts ...Option) {
 	*p = def
-	f.append((*int32Value)(p), name, def, opts...)
+	f.append((*int32Value)(p), name, opts...)
 }
 
 func Int32Var(p *int32, name string, def int32, opts ...Option) {
@@ -111,7 +111,7 @@ func Int64(name string, def int64, opts ...Option) *int64 {
 
 func (f *Flagx) Int64Var(p *int64, name string, def int64, opts ...Option) {
 	*p = def
-	f.append((*int64Value)(p), name, def, opts...)
+	f.append((*int64Value)(p), name, opts...)
 }
 
 func Int64Var(p *int64, name string, def int64, opts ...Option) {
@@ -134,7 +134,7 @@ func Uint(name string, def uint, opts ...Option) *uint {
 
 func (f *Flagx) UintVar(p *uint, name string, def uint, opts ...Option) {
 	*p = def
-	f.append((*uintValue)(p), name, def, opts...)
+	f.append((*uintValue)(p), name, opts...)
 }
 
 func UintVar(p *uint, name string, def uint, opts ...Option) {
@@ -157,7 +157,7 @@ func Uint8(name string, def uint8, opts ...Option) *uint8 {
 
 func (f *Flagx) Uint8Var(p *uint8, name string, def uint8, opts ...Option) {
 	*p = def
-	f.append((*uint8Value)(p), name, def, opts...)
+	f.append((*uint8Value)(p), name, opts...)
 }
 
 func Uint8Var(p *uint8, name string, def uint8, opts ...Option) {
@@ -180,7 +180,7 @@ func Uint16(name string, def uint16, opts ...Option) *uint16 {
 
 func (f *Flagx) Uint16Var(p *uint16, name string, def uint16, opts ...Option) {
 	*p = def
-	f.append((*uint16Value)(p), name, def, opts...)
+	f.append((*uint16Value)(p), name, opts...)
 }
 
 func Uint16Var(p *uint16, name string, def uint16, opts ...Option) {
@@ -203,7 +203,7 @@ func Uint32(name string, def uint32, opts ...Option) *uint32 {
 
 func (f *Flagx) Uint32Var(p *uint32, name string, def uint32, opts ...Option) {
 	*p = def
-	f.append((*uint32Value)(p), name, def, opts...)
+	f.append((*uint32Value)(p), name, opts...)
 }
 
 func Uint32Var(p *uint32, name string, def uint32, opts ...Option) {
@@ -226,7 +226,7 @@ func Uint64(name string, def uint64, opts ...Option) *uint64 {
 
 func (f *Flagx) Uint64Var(p *uint64, name string, def uint64, opts ...Option) {
 	*p = def
-	f.append((*uint64Value)(p), name, def, opts...)
+	f.append((*uint64Value)(p), name, opts...)
 }
 
 func Uint64Var(p *uint64, name string, def uint64, opts ...Option) {
@@ -249,7 +249,7 @@ func Float32(name string, def float32, opts ...Option) *float32 {
 
 func (f *Flagx) Float32Var(p *float32, name string, def float32, opts ...Option) {
 	*p = def
-	f.append((*float32Value)(p), name, def, opts...)
+	f.append((*float32Value)(p), name, opts...)
 }
 
 func Float32Var(p *float32, name string, def float32, opts ...Option) {
@@ -272,7 +272,7 @@ func Float64(name string, def float64, opts ...Option) *float64 {
 
 func (f *Flagx) Float64Var(p *float64, name string, def float64, opts ...Option) {
 	*p = def
-	f.append((*float64Value)(p), name, def, opts...)
+	f.append((*float64Value)(p), name, opts...)
 }
 
 func Float64Var(p *float64, name string, def float64, opts ...Option) {
@@ -295,7 +295,7 @@ func Bool(name string, def bool, opts ...Option) *bool {
 
 func (f *Flagx) BoolVar(p *bool, name string, def bool, opts ...Option) {
 	*p = def
-	f.append((*boolValue)(p), name, def, opts...)
+	f.append((*boolValue)(p), name, opts...)
 }
 
 func BoolVar(p *bool, name string, def bool, opts ...Option) {
@@ -318,7 +318,7 @@ func String(name string, def string, opts ...Option) *string {
 
 func (f *Flagx) StringVar(p *string, name string, def string, opts ...Option) {
 	*p = def
-	f.append((*stringValue)(p), name, def, opts...)
+	f.append((*stringValue)(p), name, opts...)
 }
 
 func StringVar(p *string, name string, def string, opts ...Option) {
@@ -341,7 +341,7 @@ func Duration(name string, def time.Duration, opts ...Option) *time.Duration {
 
 func (f *Flagx) DurationVar(p *time.Duration, name string, def time.Duration, opts ...Option) {
 	*p = def
-	f.append((*durationValue)(p), name, def, opts...)
+	f.append((*durationValue)(p), name, opts...)
 }
 
 func DurationVar(p *time.Duration, name string, def time.Duration, opts ...Option) {
@@ -353,7 +353,8 @@ func DurationVar(p *time.Duration, name string, def time.Duration, opts ...Optio
 // File start ========================================
 
 func (f *Flagx) File(name string, def *os.File, opts ...Option) *os.File {
-	v := new(os.File)
+	// v := new(os.File)
+	v := os.NewFile(0, "")
 	f.FileVar(v, name, def, opts...)
 	return v
 }
@@ -366,7 +367,7 @@ func (f *Flagx) FileVar(p *os.File, name string, def *os.File, opts ...Option) {
 	if def != nil {
 		*p = *def
 	}
-	f.append((*fileValue)(p), name, def, opts...)
+	f.append((*fileValue)(p), name, opts...)
 }
 
 func FileVar(p *os.File, name string, def *os.File, opts ...Option) {
@@ -391,7 +392,7 @@ func (f *Flagx) IntListVar(p *[]int, name string, def []int, opts ...Option) {
 	if def != nil {
 		*p = def
 	}
-	f.append((*intList)(p), name, def, opts...)
+	f.append((*intList)(p), name, opts...)
 }
 
 func IntListVar(p *[]int, name string, def []int, opts ...Option) {
@@ -416,7 +417,7 @@ func (f *Flagx) Int8ListVar(p *[]int8, name string, def []int8, opts ...Option) 
 	if def != nil {
 		*p = def
 	}
-	f.append((*int8List)(p), name, def, opts...)
+	f.append((*int8List)(p), name, opts...)
 }
 
 func Int8ListVar(p *[]int8, name string, def []int8, opts ...Option) {
@@ -441,7 +442,7 @@ func (f *Flagx) Int16ListVar(p *[]int16, name string, def []int16, opts ...Optio
 	if def != nil {
 		*p = def
 	}
-	f.append((*int16List)(p), name, def, opts...)
+	f.append((*int16List)(p), name, opts...)
 }
 
 func Int16ListVar(p *[]int16, name string, def []int16, opts ...Option) {
@@ -466,7 +467,7 @@ func (f *Flagx) Int32ListVar(p *[]int32, name string, def []int32, opts ...Optio
 	if def != nil {
 		*p = def
 	}
-	f.append((*int32List)(p), name, def, opts...)
+	f.append((*int32List)(p), name, opts...)
 }
 
 func Int32ListVar(p *[]int32, name string, def []int32, opts ...Option) {
@@ -491,7 +492,7 @@ func (f *Flagx) Int64ListVar(p *[]int64, name string, def []int64, opts ...Optio
 	if def != nil {
 		*p = def
 	}
-	f.append((*int64List)(p), name, def, opts...)
+	f.append((*int64List)(p), name, opts...)
 }
 
 func Int64ListVar(p *[]int64, name string, def []int64, opts ...Option) {
@@ -516,7 +517,7 @@ func (f *Flagx) UintListVar(p *[]uint, name string, def []uint, opts ...Option) 
 	if def != nil {
 		*p = def
 	}
-	f.append((*uintList)(p), name, def, opts...)
+	f.append((*uintList)(p), name, opts...)
 }
 
 func UintListVar(p *[]uint, name string, def []uint, opts ...Option) {
@@ -541,7 +542,7 @@ func (f *Flagx) Uint8ListVar(p *[]uint8, name string, def []uint8, opts ...Optio
 	if def != nil {
 		*p = def
 	}
-	f.append((*uint8List)(p), name, def, opts...)
+	f.append((*uint8List)(p), name, opts...)
 }
 
 func Uint8ListVar(p *[]uint8, name string, def []uint8, opts ...Option) {
@@ -566,7 +567,7 @@ func (f *Flagx) Uint16ListVar(p *[]uint16, name string, def []uint16, opts ...Op
 	if def != nil {
 		*p = def
 	}
-	f.append((*uint16List)(p), name, def, opts...)
+	f.append((*uint16List)(p), name, opts...)
 }
 
 func Uint16ListVar(p *[]uint16, name string, def []uint16, opts ...Option) {
@@ -591,7 +592,7 @@ func (f *Flagx) Uint32ListVar(p *[]uint32, name string, def []uint32, opts ...Op
 	if def != nil {
 		*p = def
 	}
-	f.append((*uint32List)(p), name, def, opts...)
+	f.append((*uint32List)(p), name, opts...)
 }
 
 func Uint32ListVar(p *[]uint32, name string, def []uint32, opts ...Option) {
@@ -616,7 +617,7 @@ func (f *Flagx) Uint64ListVar(p *[]uint64, name string, def []uint64, opts ...Op
 	if def != nil {
 		*p = def
 	}
-	f.append((*uint64List)(p), name, def, opts...)
+	f.append((*uint64List)(p), name, opts...)
 }
 
 func Uint64ListVar(p *[]uint64, name string, def []uint64, opts ...Option) {
@@ -641,7 +642,7 @@ func (f *Flagx) Float32ListVar(p *[]float32, name string, def []float32, opts ..
 	if def != nil {
 		*p = def
 	}
-	f.append((*float32List)(p), name, def, opts...)
+	f.append((*float32List)(p), name, opts...)
 }
 
 func Float32ListVar(p *[]float32, name string, def []float32, opts ...Option) {
@@ -666,7 +667,7 @@ func (f *Flagx) Float64ListVar(p *[]float64, name string, def []float64, opts ..
 	if def != nil {
 		*p = def
 	}
-	f.append((*float64List)(p), name, def, opts...)
+	f.append((*float64List)(p), name, opts...)
 }
 
 func Float64ListVar(p *[]float64, name string, def []float64, opts ...Option) {
@@ -691,7 +692,7 @@ func (f *Flagx) BoolListVar(p *[]bool, name string, def []bool, opts ...Option) 
 	if def != nil {
 		*p = def
 	}
-	f.append((*boolList)(p), name, def, opts...)
+	f.append((*boolList)(p), name, opts...)
 }
 
 func BoolListVar(p *[]bool, name string, def []bool, opts ...Option) {
@@ -716,7 +717,7 @@ func (f *Flagx) StringListVar(p *[]string, name string, def []string, opts ...Op
 	if def != nil {
 		*p = def
 	}
-	f.append((*stringList)(p), name, def, opts...)
+	f.append((*stringList)(p), name, opts...)
 }
 
 func StringListVar(p *[]string, name string, def []string, opts ...Option) {
@@ -741,7 +742,7 @@ func (f *Flagx) DurationListVar(p *[]time.Duration, name string, def []time.Dura
 	if def != nil {
 		*p = def
 	}
-	f.append((*durationList)(p), name, def, opts...)
+	f.append((*durationList)(p), name, opts...)
 }
 
 func DurationListVar(p *[]time.Duration, name string, def []time.Duration, opts ...Option) {
@@ -766,7 +767,7 @@ func (f *Flagx) FileListVar(p *[]*os.File, name string, def []*os.File, opts ...
 	if def != nil {
 		*p = def
 	}
-	f.append((*fileList)(p), name, def, opts...)
+	f.append((*fileList)(p), name, opts...)
 }
 
 func FileListVar(p *[]*os.File, name string, def []*os.File, opts ...Option) {

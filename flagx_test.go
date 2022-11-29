@@ -2,8 +2,8 @@ package flagx
 
 import (
 	"encoding/base64"
+	"flag"
 	"fmt"
-	"github.com/stretchr/testify/suite"
 	"math"
 	"math/rand"
 	"os"
@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type obj struct {
@@ -32,6 +34,31 @@ type obj struct {
 	string   *string
 	duration *time.Duration
 	file     *os.File
+}
+
+var (
+	_     = flag.NewFlagSet("tester", flag.PanicOnError)
+	value = flag.String("str", "string", "string value")
+	xval  = String("xval,xx", "def", WithDescription("flagx based on flag string"))
+	_     = String("xval1", "def", WithDescription("1 flagx based on flag string"))
+	_     = String("xval2", "def", WithDescription("2 flagx based on flag string"))
+	_     = String("xval3", "def", WithDescription("3 flagx based on flag string"))
+	_     = String("xval4", "def", WithDescription("4 flagx based on flag string"))
+	_     = String("xval5", "def", WithDescription("5 flagx based on flag string"))
+	// _     = String("xval1,xx1", "def", WithDescription("1 flagx based on flag string"))
+	// _     = String("xval2,xx2", "def", WithDescription("2 flagx based on flag string"))
+	// _     = String("xval3,xx3", "def", WithDescription("3 flagx based on flag string"))
+	// _     = String("xval4,xx4", "def", WithDescription("4 flagx based on flag string"))
+	// _     = String("xval5,xx5", "def", WithDescription("5 flagx based on flag string"))
+	// _ = String("xvals,xx", "xvalue", WithDescription("xval flag"))
+)
+
+func TestList(t *testing.T) {
+	flag.CommandLine.Init("nnnn", flag.PanicOnError)
+	t.Log(*value)
+	t.Log(*xval)
+	list := intList{1, 2, 3, 4, 5}
+	t.Log(list.String())
 }
 
 type BasicSuite struct {
