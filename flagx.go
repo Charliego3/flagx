@@ -2,6 +2,7 @@ package flagx
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"os"
 
@@ -10,42 +11,41 @@ import (
 )
 
 const (
-	ContinueOnError uint8 = 0b1
-	SkipNoDeclared  uint8 = 0b10
-	ClearAfterParse uint8 = 0b100
+	ContinueOnError flag.ErrorHandling = 0b1
+	SkipNoDeclared  flag.ErrorHandling = 0b10
+	ClearAfterParse flag.ErrorHandling = 0b100
 )
 
 type Flagx struct {
-	*flag.FlagSet
-	name   string
+	set    *flag.FlagSet
 	desc   string
 	flags  []*Flag
 	args   []string
 	output io.Writer
 
 	UsageFn  func()
-	handling uint8
+	handling flag.ErrorHandling
+}
+
+func init() {
+	flag.CommandLine.Init(os.Args[0], flag.ExitOnError)
 }
 
 var (
-	CommandLine = newfgx(os.Args[0], "", flag.CommandLine)
+	CommandLine = newfgx("", flag.CommandLine)
 	patchOSExit = os.Exit
 )
 
 func NewNamedFlagx(name, description string) *Flagx {
-	return newfgx(name, description, flag.NewFlagSet(name, flag.ExitOnError))
+	return newfgx(description, flag.NewFlagSet(name, flag.ExitOnError))
 }
 
-func newfgx(name, description string, set *flag.FlagSet) *Flagx {
+func newfgx(description string, set *flag.FlagSet) *Flagx {
 	set.SetOutput(io.Discard)
 	lipgloss.SetColorProfile(termenv.TrueColor)
-	if len(name) == 0 {
-		name = os.Args[0]
-	}
 	f := &Flagx{
-		name:    name,
-		desc:    description,
-		FlagSet: set,
+		desc: description,
+		set:  set,
 	}
 	f.addHelp()
 	return f
@@ -59,19 +59,19 @@ func (f *Flagx) SetOutput(w io.Writer) {
 	f.output = w
 }
 
-func (f *Flagx) SetErrorHandling(h uint8) {
+func (f *Flagx) SetErrorHandling(h flag.ErrorHandling) {
 	f.handling = h
 }
 
-func SetErrorHandling(h uint8) {
+func SetErrorHandling(h flag.ErrorHandling) {
 	CommandLine.handling = h
 }
 
-func (f *Flagx) GetErrorHandling() uint8 {
+func (f *Flagx) ErrorHandling() flag.ErrorHandling {
 	return f.handling
 }
 
-func GetErrorHandling() uint8 {
+func ErrorHandling() flag.ErrorHandling {
 	return CommandLine.handling
 }
 
@@ -88,6 +88,92 @@ func (f *Flagx) Output() io.Writer {
 
 func Output() io.Writer {
 	return CommandLine.Output()
+}
+
+func (f *Flagx) Arg(i int) string {
+	if i < 0 || i >= len(f.args) {
+		return ""
+	}
+	return f.args[i]
+}
+
+func Arg(i int) string {
+	return CommandLine.Arg(i)
+}
+
+func (f *Flagx) Args() []string {
+	return f.args
+}
+
+func Args() []string {
+	return CommandLine.args
+}
+
+func (f *Flagx) Name() string {
+	return f.set.Name()
+}
+
+func Name() string {
+	return CommandLine.Name()
+}
+
+func (f *Flagx) Lookup(name string) *flag.Flag {
+	return f.set.Lookup(name)
+}
+
+func Lookup(name string) *flag.Flag {
+	return CommandLine.Lookup(name)
+}
+
+func (f *Flagx) NArg() int {
+	return len(f.args)
+}
+
+func NArg() int {
+	return CommandLine.NArg()
+}
+
+func (f *Flagx) NFlag() int {
+	return len(f.flags)
+}
+
+func NFlag() int {
+	return CommandLine.NFlag()
+}
+
+func (f *Flagx) Visit(fn func(*Flag)) {
+	for _, fg := range f.flags {
+		fn(fg)
+	}
+}
+
+func Visit(fn func(*Flag)) {
+	CommandLine.Visit(fn)
+}
+
+func (f *Flagx) Set(name, value string) error {
+	var fg *Flag
+	for _, g := range f.flags {
+		if g.Lname == name || g.Sname == name {
+			fg = g
+			break
+		}
+	}
+
+	if fg == nil {
+		return fmt.Errorf("no such flag -%v", name)
+	}
+
+	_, isList := fg.Value.(listValue)
+	if fg.immutable && fg.Parsed && !isList {
+		return fmt.Errorf("flag is immutable, can not be modtify")
+	}
+
+	return f.set.Set(name, value)
+}
+
+func Set(name, value string) {
+	CommandLine.Set(name, value)
 }
 
 func (f *Flagx) Parse() error {
@@ -112,7 +198,7 @@ func (f *Flagx) Parse() error {
 	}
 
 	for _, fg := range f.flags {
-		if fg.require && !fg.parsed {
+		if fg.require && !fg.Parsed {
 			f.report("flag is required: ", fg.showFlag())
 			patchOSExit(0)
 		}

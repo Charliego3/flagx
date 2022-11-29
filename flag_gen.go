@@ -353,7 +353,6 @@ func DurationVar(p *time.Duration, name string, def time.Duration, opts ...Optio
 // File start ========================================
 
 func (f *Flagx) File(name string, def *os.File, opts ...Option) *os.File {
-	// v := new(os.File)
 	v := os.NewFile(0, "")
 	f.FileVar(v, name, def, opts...)
 	return v
@@ -375,6 +374,29 @@ func FileVar(p *os.File, name string, def *os.File, opts ...Option) {
 }
 
 // File ended ========================================
+
+// Func start ========================================
+
+func (f *Flagx) Func(name string, def func(string) error, opts ...Option) *func(string) error {
+	v := new(func(string) error)
+	f.FuncVar(v, name, def, opts...)
+	return v
+}
+
+func Func(name string, def func(string) error, opts ...Option) *func(string) error {
+	return CommandLine.Func(name, def, opts...)
+}
+
+func (f *Flagx) FuncVar(p *func(string) error, name string, def func(string) error, opts ...Option) {
+	*p = def
+	f.append((*funcValue)(p), name, opts...)
+}
+
+func FuncVar(p *func(string) error, name string, def func(string) error, opts ...Option) {
+	CommandLine.FuncVar(p, name, def, opts...)
+}
+
+// Func ended ========================================
 
 // IntList start ========================================
 

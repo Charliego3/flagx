@@ -245,6 +245,14 @@ func (f *fileValue) String() string {
 	return (*os.File)(f).Name()
 }
 
+type funcValue func(string) error
+
+func (f funcValue) Set(s string) error { return f(s) }
+
+func (f funcValue) String() string { return "" }
+
+// List Value
+
 type listValue interface {
 	IsList() bool
 }

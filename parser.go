@@ -33,10 +33,10 @@ func (f *Flagx) parseOne() (bool, error) {
 	}
 
 	for _, g := range f.flags {
-		if long && g.lname == name {
+		if long && g.Lname == name {
 			fg = g
 			break
-		} else if g.sname == name {
+		} else if g.Sname == name {
 			fg = g
 			break
 		}
@@ -51,8 +51,8 @@ func (f *Flagx) parseOne() (bool, error) {
 		return false, nil
 	}
 
-	_, isList := fg.value.(listValue)
-	if fg.immutable && fg.parsed && !isList {
+	_, isList := fg.Value.(listValue)
+	if fg.immutable && fg.Parsed && !isList {
 		return false, f.failf("flag multiple: %s", fg.showFlag())
 	}
 
@@ -61,7 +61,7 @@ func (f *Flagx) parseOne() (bool, error) {
 	if idx <= 0 {
 		vo, vv, _ := f.nextArg()
 		if len(vv) > 0 && vo[0] == '-' {
-			if _, ok := fg.value.(*boolValue); ok {
+			if _, ok := fg.Value.(*boolValue); ok {
 				value = "true"
 				f.args = append([]string{vo}, f.args...)
 			} else {
@@ -72,10 +72,10 @@ func (f *Flagx) parseOne() (bool, error) {
 		}
 	}
 
-	if err = fg.value.Set(value); err != nil {
+	if err = fg.Value.Set(value); err != nil {
 		return false, f.failf("invalid value %q for flag %s: %v", value, fg.showFlag(), err)
 	}
-	fg.parsed = true
+	fg.Parsed = true
 	return true, nil
 }
 
@@ -133,7 +133,7 @@ func (f *Flagx) defaultUsage() {
 	defStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D26CD"))
 	typStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.AdaptiveColor{Light: "#CFCFCF", Dark: "#4F4F4F"})
 	descStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#808080"))
-	name := f.name
+	name := f.set.Name()
 	if len(name) == 0 {
 		name = os.Args[0]
 	}
@@ -157,9 +157,9 @@ func (f *Flagx) defaultUsage() {
 			}
 			name += lnameStyle.Render(lname)
 		}
-		usage = fg.usage
-		if len(fg.defVal) > 0 {
-			usage += defStyle.Render(` (default: ` + fg.getDef() + `)`)
+		usage = fg.Usage
+		if len(fg.DefVal) > 0 {
+			usage += defStyle.Render(fg.getDef())
 		}
 		_, _ = fmt.Fprintln(w, name, "\t", typStyle.Render(typ), "\t", descStyle.Render("     "+usage))
 	}

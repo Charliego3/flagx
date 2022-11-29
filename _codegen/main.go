@@ -57,7 +57,7 @@ func main() {
 		"int", "int8", "int16", "int32", "int64",
 		"uint", "uint8", "uint16", "uint32", "uint64",
 		"float32", "float64",
-		"bool", "string", "duration", "file",
+		"bool", "string", "duration", "file", "func",
 		"intList", "int8List", "int16List", "int32List", "int64List",
 		"uintList", "uint8List", "uint16List", "uint32List", "uint64List",
 		"float32List", "float64List",
@@ -66,7 +66,7 @@ func main() {
 	types := []string{
 		"int", "int8", "int16", "int32", "int64",
 		"uint", "uint8", "uint16", "uint32", "uint64",
-		"float32", "float64", "bool", "string", "time.Duration", "os.File",
+		"float32", "float64", "bool", "string", "time.Duration", "os.File", "func(string) error",
 		"[]int", "[]int8", "[]int16", "[]int32", "[]int64",
 		"[]uint", "[]uint8", "[]uint16", "[]uint32", "[]uint64",
 		"[]float32", "[]float64", "[]bool", "[]string", "[]time.Duration", "[]*os.File"}

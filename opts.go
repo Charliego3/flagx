@@ -4,7 +4,7 @@ type Option func(*Flag)
 
 func WithDescription(desc string) Option {
 	return func(arg *Flag) {
-		arg.usage = desc
+		arg.Usage = desc
 	}
 }
 

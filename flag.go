@@ -8,18 +8,19 @@ import (
 )
 
 type Flag struct {
-	lname     string
-	sname     string
-	defVal    string
-	usage     string // options
-	require   bool   // options
-	immutable bool   // options
-	parsed    bool
-	value     flag.Value
+	Lname  string
+	Sname  string
+	DefVal string
+	Value  flag.Value
+	Parsed bool
+	Usage  string // options
+
+	require   bool // options
+	immutable bool // options
 }
 
 func (fg *Flag) isHelp() bool {
-	return fg.lname == "help" && fg.sname == "h"
+	return fg.Lname == "help" && fg.Sname == "h"
 }
 
 func (fg *Flag) getType() string {
@@ -27,7 +28,7 @@ func (fg *Flag) getType() string {
 		return ""
 	}
 
-	switch fg.value.(type) {
+	switch fg.Value.(type) {
 	case *intValue:
 		return "int"
 	case *int8Value:
@@ -60,6 +61,8 @@ func (fg *Flag) getType() string {
 		return "duration"
 	case *fileValue:
 		return "file"
+	case *funcValue:
+		return "func"
 	case *intList:
 		return "[]int"
 	case *int8List:
@@ -98,20 +101,24 @@ func (fg *Flag) getType() string {
 }
 
 func (fg *Flag) getDef() string {
-	switch fg.value.(type) {
-	case *stringValue, *durationValue, *fileValue:
-		return "\"" + fg.defVal + "\""
-	default:
-		return fg.defVal
+	if len(fg.DefVal) == 0 {
+		return ""
 	}
+
+	def := fg.DefVal
+	switch fg.Value.(type) {
+	case *stringValue, *durationValue, *fileValue:
+		def = `"` + def + `"`
+	}
+	return ` (default: "` + def + `")`
 }
 
 func (f *Flagx) addHelp() {
-	f.append(new(stringValue), "help,h", WithDescription("Help for "+f.name))
+	f.append(new(stringValue), "help,h", WithDescription("Help for "+f.set.Name()))
 }
 
 func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
-	fg := &Flag{value: v, defVal: v.String()}
+	fg := &Flag{Value: v, DefVal: v.String()}
 	for _, opt := range opts {
 		opt(fg)
 	}
@@ -119,14 +126,14 @@ func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
 	keys := strings.Split(name, ",")
 	keyn := len(keys)
 	if keyn > 2 || keyn == 0 {
-		f.badSyntax(name, fg.usage)
+		f.badSyntax(name, fg.Usage)
 	} else if keyn == 2 {
-		fg.lname = keys[0]
-		fg.sname = keys[1]
+		fg.Lname = keys[0]
+		fg.Sname = keys[1]
 	} else if len(keys[0]) == 1 {
-		fg.sname = keys[0]
+		fg.Sname = keys[0]
 	} else {
-		fg.lname = keys[0]
+		fg.Lname = keys[0]
 	}
 
 	var short bool
@@ -142,40 +149,37 @@ func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
 			} else {
 				msg = fg.getLongName()
 			}
-			msg = "[" + msg + "] " + fg.usage
-			def := v.String()
-			if len(def) > 0 {
-				msg += ` (default: ` + fg.getDef() + `)`
-			}
+			msg = "[" + msg + "] " + fg.Usage
+			msg += fg.getDef()
 			f.report("redefined:", msg)
 		} else { // bad syntax
-			f.badSyntax("["+name+"]", fg.usage)
+			f.badSyntax("["+name+"]", fg.Usage)
 		}
 	}()
 
-	if len(fg.lname) > 0 {
-		f.set.Var(v, fg.lname, fg.usage)
+	if len(fg.Lname) > 0 {
+		f.set.Var(v, fg.Lname, fg.Usage)
 	}
-	if len(fg.sname) > 0 {
+	if len(fg.Sname) > 0 {
 		short = true
-		f.set.Var(v, fg.sname, fg.usage)
+		f.set.Var(v, fg.Sname, fg.Usage)
 	}
 
 	f.flags = append(f.flags, fg)
 }
 
 func (fg *Flag) getShortName() string {
-	if len(fg.sname) == 0 {
+	if len(fg.Sname) == 0 {
 		return ""
 	}
-	return "-" + fg.sname
+	return "-" + fg.Sname
 }
 
 func (fg *Flag) getLongName() string {
-	if len(fg.lname) == 0 {
+	if len(fg.Lname) == 0 {
 		return ""
 	}
-	return "--" + fg.lname
+	return "--" + fg.Lname
 }
 
 func (fg *Flag) showFlag() string {
@@ -200,7 +204,7 @@ func (f *Flagx) badSyntax(msg ...string) {
 }
 
 func (f *Flagx) report(msgs ...string) {
-	namen := len(f.name)
+	namen := len(f.set.Name())
 	n := namen + len(msgs) + 1
 	for i := 0; i < len(msgs); i++ {
 		n += len(msgs[i])
@@ -209,7 +213,7 @@ func (f *Flagx) report(msgs ...string) {
 	var b strings.Builder
 	b.Grow(n)
 	if namen > 0 {
-		b.WriteString(f.name)
+		b.WriteString(f.set.Name())
 	}
 	for _, msg := range msgs {
 		b.WriteString(" " + msg)
