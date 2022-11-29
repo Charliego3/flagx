@@ -159,6 +159,14 @@ func (f *Flagx) append(v flag.Value, name string, opts ...Option) {
 					sffg.DefValue = fg.DefVal
 					sffg.Value = v
 				}
+
+				if lffg != nil || sffg != nil {
+					for _, g := range f.flags {
+						if g.Lname == fg.Lname || g.Sname == fg.Sname {
+							g.Value = v
+						}
+					}
+				}
 				return
 			}
 
