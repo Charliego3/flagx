@@ -60,10 +60,12 @@ func (f *Flagx) parseOne() (bool, error) {
 	// eg: --name [value], bool can be `--name` only
 	if idx <= 0 {
 		vo, vv, _ := f.nextArg()
-		if len(vv) > 0 && vo[0] == '-' {
+		if (len(vv) > 0 && vo[0] == '-') || len(vv) == 0 {
 			if _, ok := fg.Value.(*boolValue); ok {
 				value = "true"
-				f.args = append([]string{vo}, f.args...)
+				if len(vv) > 0 {
+					f.args = append([]string{vo}, f.args...)
+				}
 			} else {
 				return false, f.failf("flag needs an argument: %s", fg.showFlag())
 			}
